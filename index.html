@@ -1736,6 +1736,505 @@ select{
     width: 44px;
     height: 44px;
     background: #15120d;
+  40px rgba(0,0,0,.2);
+animation:fadeUp .25s;
+}
+
+.edit-box h3{
+margin-bottom:12px;
+text-align:center;
+color:#111827;
+}
+
+.edit-box input{
+margin:15px 0;
+}
+
+.edit-buttons{
+display:flex;
+gap:10px;
+}
+
+.edit-buttons button{
+flex:1;
+}
+.card{
+    position:relative;
+    overflow:hidden;
+}
+
+.card::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:-120%;
+    width:60%;
+    height:100%;
+    background:linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.35),
+        transparent
+    );
+    transform:skewX(-20deg);
+    transition:left .4s ease;
+    pointer-events:none;
+}
+
+.card:hover::before{
+    left:160%;
+}
+
+.card p{
+    text-shadow:0 0 10px rgba(16,185,129,.25);
+    transition:.3s;
+}
+
+.card:hover p{
+    text-shadow:
+        0 0 10px rgba(16,185,129,.35),
+        0 0 20px rgba(16,185,129,.20);
+}
+.progress{
+    width:100%;
+    height:8px;
+    background:rgba(0,0,0,.08);
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:12px;
+}
+
+.progress-fill{
+    height:100%;
+    width:0%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#10B981,#34D399);
+    transition:width .6s ease;
+}
+.dark body{
+    background:#000;
+    color:#fff;
+}
+
+.dark nav{
+    background:#050505;
+    border-bottom:1px solid #1f1f1f;
+}
+
+.dark .card{
+    background:#111;
+    border:1px solid #222;
+    color:#fff;
+}
+
+.dark h2,
+.dark h3{
+    color:#22C55E;
+}
+
+.dark input,
+.dark select{
+    background:#151515;
+    color:#fff;
+    border:1px solid #333;
+}
+
+.dark table{
+    background:#111;
+}
+
+.dark th{
+    background:#16A34A;
+}
+
+.dark td{
+    color:#fff;
+    border-bottom:1px solid #222;
+}
+
+.dark table td:first-child,
+.dark table th:first-child{
+    background:#111;
+    color:#fff;
+}
+
+.dark footer{
+    color:#888;
+}
+
+.dark button{
+    background:linear-gradient(135deg,#16A34A,#22C55E);
+}
+
+.dark .member-card{
+    background:#111;
+    border:1px solid #222;
+}
+
+.dark .member-info b{
+    color:#22C55E;
+}
+
+.dark .member-info small{
+    color:#aaa;
+}
+#themeToggle{
+    position:fixed;
+    top:15px;
+    right:15px;
+    left:auto;
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#10B981,#059669);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    cursor:grab;
+    user-select:none;
+    touch-action:none;
+    z-index:999999;
+    box-shadow:0 8px 25px rgba(0,0,0,.35);
+    
+}
+nav a:focus,
+nav a:active,
+nav a:focus-visible{
+    outline: none;
+    box-shadow: none;
+}
+nav a{
+    -webkit-tap-highlight-color: transparent;
+}
+body.dark{
+    background:
+    radial-gradient(circle at top left,#0f2e22 0%,transparent 35%),
+    radial-gradient(circle at bottom right,#10263b 0%,transparent 35%),
+    linear-gradient(135deg,#0b0f14,#111827,#161b22);
+
+    color:#F3F4F6;
+}
+
+body.dark .card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.dark nav{
+    background:rgba(8,10,14,.92);
+    border-bottom:1px solid rgba(16,185,129,.12);
+}
+
+body.dark table {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+body.dark td{
+    color:#E5E7EB;
+}
+
+body.dark th{
+    background:linear-gradient(135deg,#047857,#10B981);
+}
+body.dark input,
+body.dark select{
+    background:#1A1F28;
+    color:#F3F4F6;
+    border:1px solid rgba(16,185,129,.25);
+}
+
+body.dark input::placeholder{
+    color:#9CA3AF;
+}
+body.dark nav{
+    background:rgba(8,10,14,.92);
+    border-bottom:1px solid rgba(16,185,129,.12);
+}
+
+body.dark table{
+    background:rgba(24,28,36,.92);
+}
+
+body.dark td{
+    color:#E5E7EB;
+}
+
+body.dark th{
+    background:linear-gradient(135deg,#047857,#10B981);
+}
+body.dark h2,
+body.dark h3{
+    color:#34D399;
+}
+
+body.dark #themeToggle{
+    background:linear-gradient(135deg,#059669,#10B981);
+    box-shadow:0 10px 25px rgba(16,185,129,.35);
+}
+
+body.dark table td:first-child,
+body.dark table th:first-child{
+    background:#1A1F28;
+    color:#34D399;
+}
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:none;
+}
+body{
+    transition:background-color .1s ease,
+               background .1s ease,
+               color .1s ease;
+}
+button:focus,
+button:active,
+button:focus-visible{
+    outline:none;
+    box-shadow:none;
+}
+
+button{
+    -webkit-tap-highlight-color:transparent;
+}
+
+input{
+    -webkit-tap-highlight-color:transparent;
+}
+
+select{
+    -webkit-tap-highlight-color:transparent;
+}
+/* WhatsApp Floating Button Style */
+/* প্রিমিয়াম সার্কেল গ্লাসি স্টাইল */
+.whatsapp-fab {
+    position: fixed; 
+    bottom: 25px; 
+    right: 25px; 
+    width: 65px; 
+    height: 65px; 
+    border-radius: 50%; /* এটি বাটনটিকে পুরোপুরি গোল করবে */
+    
+    /* গ্লাস ইফেক্ট: অতি স্বচ্ছ এবং প্রিমিয়াম ফিল */
+    background: rgba(255, 255, 255, 0.15); 
+    backdrop-filter: blur(25px); 
+    -webkit-backdrop-filter: blur(25px);
+    
+    /* বর্ডার ও গ্লো */
+    border: 1.5px solid rgba(255, 255, 255, 0.5); 
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.3), 
+        inset 0 0 15px rgba(255, 255, 255, 0.4); /* ভেতরের দিকে গ্লাসি শাইন */
+    
+    cursor: pointer;
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; 
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+}
+
+/* বাটনটিতে একটি প্রিমিয়াম রিফ্লেকশন লেয়ার */
+.whatsapp-fab::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4), transparent 70%);
+}
+
+.whatsapp-fab:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 15px 40px rgba(37, 211, 102, 0.4);
+}
+
+.whatsapp-fab img {
+    width: 38px;
+    height: 38px;
+    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));
+}
+
+
+/* শুরুতেই বাটনটি লুকিয়ে রাখার জন্য */
+#shareBtn {
+    display: none;
+}
+#themeToggle {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%; /* গোল শেপ */
+    
+    /* গ্লাসি ইফেক্ট */
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    
+    /* বর্ডার ও গ্লো */
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.3), 
+        inset 0 0 15px rgba(255, 255, 255, 0.4);
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    z-index: 999999;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* বাটন রিফ্লেকশন */
+#themeToggle::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4), transparent 70%);
+}
+
+#themeToggle:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+/* গ্লাসি বাটন স্টাইল */
+.btn-glass {
+    background: rgba(16, 185, 129, 0.4) !important; /* হালকা সবুজ স্বচ্ছ রঙ */
+    backdrop-filter: blur(10px); /* ব্লার ইফেক্ট */
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3); /* চিকন সাদা বর্ডার */
+    color: white !important;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+}
+
+/* হোভার ইফেক্ট */
+.btn-glass:hover {
+    background: rgba(16, 185, 129, 0.6) !important;
+}
+.glass-button {
+    /* গ্লাস ইফেক্ট */
+    background: rgba(255, 255, 255, 0.1); 
+    backdrop-filter: blur(15px); /* ব্লার বাড়িয়ে প্রিমিয়াম ফিল আনা */
+    -webkit-backdrop-filter: blur(15px);
+    
+    /* বর্ডার এবং শ্যাডো */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* আরও গভীর শ্যাডো */
+    
+    /* বাটনটিকে মসৃণ করা */
+    border-radius: 12px;
+    padding: 10px 24px;
+    transition: all 0.3s ease; /* স্মুথ ট্রানজিশন */
+    cursor: pointer;
+}
+
+/* মাউস নিলে আরও প্রিমিয়াম ইফেক্ট */
+.glass-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px); /* হালকা উপরে উঠে আসা */
+}
+
+/* FINAL DARK LUXURY LOGIN */
+
+#loginScreen {
+    background:
+      radial-gradient(ellipse at 15% 15%, rgba(145,105,35,.13), transparent 38%),
+      radial-gradient(ellipse at 85% 80%, rgba(145,105,35,.12), transparent 40%),
+      #050505;
+    overflow: hidden;
+}
+
+#loginScreen::before {
+    content: "";
+    position: absolute;
+    inset: -30px;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(180,135,55,.22), transparent 18%),
+      radial-gradient(circle at 80% 35%, rgba(150,110,40,.15), transparent 20%),
+      radial-gradient(circle at 30% 85%, rgba(180,135,55,.16), transparent 22%);
+    filter: blur(45px);
+    pointer-events: none;
+}
+
+.login-card {
+    position: relative;
+    z-index: 1;
+    background: rgba(12,11,9,.68);
+    border: 1px solid rgba(190,150,70,.30);
+    border-radius: 28px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow: 0 15px 55px rgba(0,0,0,.65);
+}
+
+.hello-text {
+    font-family: Georgia, serif;
+    font-size: 62px;
+    font-style: italic;
+    font-weight: normal;
+    color: #b99a55;
+    text-shadow: 0 0 12px rgba(185,154,85,.20);
+}
+
+.login-brand {
+    color: #b99a55;
+}
+
+.login-card h1 {
+    color: #eee7d9;
+}
+
+.login-card p {
+    color: #aaa49a;
+}
+
+#googleLogin {
+    background: linear-gradient(135deg,#b99a55,#94743a);
+    border: 1px solid rgba(220,190,120,.4);
+    color: #17130b;
+    box-shadow: 0 4px 18px rgba(160,120,45,.15);
+}
+
+.login-footer {
+    color: #927744;
+}
+/* PROFILE MENU LUXURY DESIGN */
+
+.profile-wrapper {
+    position: relative;
+    display: inline-block;
+    z-index: 10000;
+}
+
+#profileBtn {
+    width: 44px;
+    height: 44px;
+    background: #15120d;
     border: 1px solid #9c7b3e;
     border-radius: 12px;
     display: flex;
