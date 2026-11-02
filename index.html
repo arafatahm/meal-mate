@@ -1237,7 +1237,7 @@ select{
     width: 44px;
     height: 44px;
     background: #15120d;
-  border: 1px solid #9c7b3e;
+    border: 1px solid #9c7b3e;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
@@ -1511,211 +1511,6 @@ select{
 .switch input:checked + .switch-slider:before {
     transform: translateX(17px);
 }
-
-
-/* ===== ChatGPT-inspired Meal Mate refresh ===== */
-:root {
-  --mm-bg: #f7f7f8;
-  --mm-surface: #ffffff;
-  --mm-sidebar: #f0f0f0;
-  --mm-text: #242424;
-  --mm-muted: #737373;
-  --mm-border: #e5e5e5;
-  --mm-accent: #10a37f;
-  --mm-accent-soft: #e7f5f0;
-  --mm-shadow: 0 1px 3px rgba(0,0,0,.045);
-}
-body {
-  background: var(--mm-bg) !important;
-  color: var(--mm-text) !important;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-  min-height: 100vh;
-}
-#appShell { min-height: 100vh; }
-nav {
-  position: fixed !important;
-  inset: 0 auto 0 0;
-  width: 244px;
-  padding: 78px 12px 18px !important;
-  display: flex !important;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 5px;
-  overflow-y: auto;
-  background: var(--mm-sidebar) !important;
-  border: 0 !important;
-  border-right: 1px solid var(--mm-border) !important;
-  backdrop-filter: none !important;
-  z-index: 1001 !important;
-  transform: none !important;
-}
-nav::before {
-  content: "Meal Mate";
-  position: absolute;
-  top: 22px;
-  left: 20px;
-  color: var(--mm-text);
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: -.6px;
-}
-nav a {
-  flex: none !important;
-  display: flex;
-  align-items: center;
-  min-height: 43px;
-  margin: 0 !important;
-  padding: 11px 13px !important;
-  border: 1px solid transparent !important;
-  border-radius: 9px !important;
-  color: #444 !important;
-  background: transparent !important;
-  text-align: left !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  text-decoration: none;
-  box-shadow: none !important;
-  transform: none !important;
-}
-nav a::before { content: ""; width: 7px; height: 7px; margin-right: 12px; border-radius: 50%; background: #a3a3a3; }
-nav a.active, nav a[aria-current="page"] {
-  color: var(--mm-text) !important;
-  background: #e2e2e2 !important;
-  border-color: #dedede !important;
-  box-shadow: none !important;
-}
-nav a.active::before { background: var(--mm-accent); }
-nav a:hover { background: #e8e8e8 !important; color: var(--mm-text) !important; transform: none !important; }
-section {
-  display: none;
-  width: min(100% - 244px, 1120px);
-  margin-left: 244px;
-  padding: 38px clamp(20px, 4vw, 54px) 50px !important;
-}
-section.active { display: block; animation: mmFade .22s ease-out !important; }
-@keyframes mmFade { from { opacity: .55; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-section h2 { color: var(--mm-text) !important; font-size: 25px !important; font-weight: 650; letter-spacing: -.7px; margin: 7px 0 20px !important; }
-section h3, .card h3 { color: var(--mm-muted) !important; font-size: 13px !important; font-weight: 600; letter-spacing: .1px; margin-bottom: 12px !important; }
-.card {
-  display: inline-block;
-  vertical-align: top;
-  width: calc(25% - 13px);
-  min-width: 175px;
-  margin: 0 10px 14px 0 !important;
-  padding: 20px !important;
-  border: 1px solid var(--mm-border) !important;
-  border-radius: 13px !important;
-  background: var(--mm-surface) !important;
-  box-shadow: var(--mm-shadow) !important;
-  backdrop-filter: none !important;
-  animation: none !important;
-  transition: border-color .18s ease, transform .18s ease;
-}
-.card:hover { transform: translateY(-2px) !important; box-shadow: 0 5px 16px rgba(0,0,0,.055) !important; }
-.card p { color: var(--mm-text) !important; font-size: 27px !important; font-weight: 650 !important; letter-spacing: -.8px; }
-.progress { height: 7px; border-radius: 20px; background: #ededed; overflow: hidden; margin-top: 16px; }
-.progress-fill { height: 100%; border-radius: inherit; background: var(--mm-accent) !important; }
-input, select, textarea {
-  width: 100%; min-height: 44px; padding: 11px 13px !important;
-  border: 1px solid #d9d9d9 !important; border-radius: 9px !important;
-  background: var(--mm-surface) !important; color: var(--mm-text) !important;
-  box-shadow: none !important; font: inherit; font-size: 14px !important;
-}
-input:focus, select:focus, textarea:focus { outline: 2px solid rgba(16,163,127,.18) !important; border-color: var(--mm-accent) !important; box-shadow: none !important; }
-.flex { display: flex; gap: 10px; margin: 10px 0 12px; }
-button, .btn-glass {
-  width: auto; min-height: 42px; padding: 10px 17px !important;
-  border: 1px solid var(--mm-accent) !important; border-radius: 9px !important;
-  color: #fff !important; background: var(--mm-accent) !important;
-  box-shadow: none !important; font-size: 14px !important; font-weight: 600 !important;
-  transition: background .15s ease, transform .15s ease;
-}
-button:hover, .btn-glass:hover { background: #0d8f70 !important; box-shadow: none !important; transform: translateY(-1px) !important; }
-button:active { transform: scale(.985) !important; }
-#googleLogin { width: 100% !important; justify-content: center; background: #fff !important; color: #242424 !important; border-color: #dedede !important; }
-#profileBtn {
-  position: fixed; top: 17px; right: 20px; z-index: 1100;
-  width: 40px; height: 40px; min-height: 40px; padding: 8px !important;
-  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px;
-  color: var(--mm-text) !important; background: var(--mm-surface) !important;
-  border: 1px solid var(--mm-border) !important; border-radius: 50% !important;
-}
-.menu-dash { width: 15px; height: 2px; background: currentColor; border-radius: 3px; }
-.profile-menu {
-  position: fixed !important; top: 64px; right: 18px; z-index: 1200;
-  width: 245px; padding: 17px !important; border: 1px solid var(--mm-border) !important;
-  border-radius: 13px !important; background: var(--mm-surface) !important;
-  box-shadow: 0 12px 35px rgba(0,0,0,.13) !important; color: var(--mm-text) !important;
-}
-.profile-heading h3, .profile-option { color: var(--mm-text) !important; }
-.profile-heading p { color: var(--mm-muted) !important; }
-.profile-divider { background: var(--mm-border) !important; }
-.profile-option { padding: 11px 4px !important; font-size: 13px !important; }
-.profile-star { color: var(--mm-accent) !important; }
-table {
-  width: 100%; margin: 14px 0 22px !important; border: 1px solid var(--mm-border) !important;
-  border-radius: 12px !important; border-collapse: separate !important; border-spacing: 0;
-  overflow: hidden; background: var(--mm-surface) !important; box-shadow: var(--mm-shadow) !important;
-  backdrop-filter: none !important;
-}
-th { padding: 13px 14px !important; background: #f3f4f4 !important; color: #505050 !important; font-size: 12px !important; font-weight: 650; letter-spacing: .15px; }
-td { padding: 12px 14px !important; color: var(--mm-text) !important; border-bottom: 1px solid var(--mm-border) !important; font-size: 13px !important; }
-table td:first-child, table th:first-child { position: static !important; background: transparent !important; color: inherit !important; }
-tr:hover td { background: #f8faf9 !important; }
-section .flex { max-width: 760px; }
-section > input[type="month"] { max-width: 220px; margin-bottom: 12px; }
-footer { margin-left: 244px; padding: 18px; color: var(--mm-muted) !important; font-size: 12px; }
-#loginScreen { background: var(--mm-bg); }
-.login-card { background: var(--mm-surface); border: 1px solid var(--mm-border); border-radius: 18px; box-shadow: 0 10px 40px rgba(0,0,0,.07); }
-.hello-text { color: var(--mm-muted); font-size: 16px !important; font-weight: 500; }
-.login-brand { color: var(--mm-text); letter-spacing: -.6px; }
-.login-card p, .login-footer { color: var(--mm-muted); }
-.whatsapp-fab { border-radius: 50% !important; }
-body.dark {
-  --mm-bg: #212121;
-  --mm-surface: #2b2b2b;
-  --mm-sidebar: #171717;
-  --mm-text: #ececec;
-  --mm-muted: #a3a3a3;
-  --mm-border: #3b3b3b;
-  --mm-accent: #10a37f;
-  --mm-accent-soft: #173d34;
-  --mm-shadow: 0 1px 3px rgba(0,0,0,.2);
-  background: var(--mm-bg) !important;
-}
-body.dark nav a { color: #d5d5d5 !important; }
-body.dark nav a.active { background: #303030 !important; border-color: #3b3b3b !important; color: #fff !important; }
-body.dark nav a:hover, body.dark tr:hover td { background: #333 !important; }
-body.dark input, body.dark select, body.dark textarea { background: #333 !important; border-color: #4a4a4a !important; color: #eee !important; }
-body.dark th { background: #353535 !important; color: #ddd !important; }
-body.dark td { color: #eee !important; }
-body.dark #googleLogin { background: #f7f7f7 !important; color: #242424 !important; }
-body.dark .login-card { background: #2b2b2b; }
-body.dark .profile-option, body.dark .profile-heading h3 { color: #eee !important; }
-@media (max-width: 760px) {
-  nav {
-    inset: 0 0 auto 0; width: 100%; height: auto; min-height: 62px;
-    padding: 7px 8px 8px !important; flex-direction: row; align-items: center;
-    overflow-x: auto; overflow-y: hidden; gap: 4px; border-right: 0 !important;
-    border-bottom: 1px solid var(--mm-border) !important;
-  }
-  nav::before { display: none; }
-  nav a { flex: 0 0 auto !important; min-height: 40px; padding: 9px 11px !important; font-size: 12px !important; white-space: nowrap; }
-  nav a::before { width: 6px; height: 6px; margin-right: 7px; }
-  section { width: 100%; margin-left: 0; padding: 88px 16px 34px !important; }
-  section h2 { font-size: 22px !important; }
-  .card { width: calc(50% - 8px); min-width: 0; margin: 0 5px 10px 0 !important; padding: 15px !important; }
-  .card p { font-size: 23px !important; }
-  .flex { flex-direction: column; }
-  .flex input, .flex select { flex: auto; }
-  section button { width: 100%; }
-  footer { margin-left: 0; }
-  #profileBtn { top: 72px; right: 13px; width: 36px; height: 36px; min-height: 36px; }
-  .profile-menu { top: 116px; right: 12px; }
-  table { display: block; overflow-x: auto; white-space: nowrap; }
-}
-@media (max-width: 380px) { .card { width: 100%; } }
-
 </style>
 
 </head>
@@ -1759,7 +1554,6 @@ body.dark .profile-option, body.dark .profile-heading h3 { color: #eee !importan
       font-size:13px;
       margin-top:15px;
       min-height:18px;
-      line-height:1.6;
     "></div>
 
     <div class="login-footer" style="font-size:12px; margin-top:22px;">
@@ -2646,7 +2440,8 @@ function shareReportWhatsApp() {
     textMessage += `${pad('Name', 8)}|${pad('Dep', 5)}|${pad('Meal(Cost)', 11)}|Bal\n`;
     textMessage += '-----------------------------------\n';
 
-    data.members.forEach(mem => {const deposit = (data.deposits[monthInput] || [])
+    data.members.forEach(mem => {
+        const deposit = (data.deposits[monthInput] || [])
             .filter(d => d.member === mem.name)
             .reduce((sum, d) => sum + numberValue(d.amount), 0);
         const meals = data.meals[monthInput] && data.meals[monthInput][mem.name]
@@ -2685,25 +2480,6 @@ function toggleShareButton(currentPageId) {
     <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp Icon" />
 </button>
 </div>
-    <script>
-// This check runs even when Chrome blocks Firebase ES modules on file:// pages.
-if (location.protocol === "file:") {
-  window.addEventListener("DOMContentLoaded", function () {
-    const message = document.getElementById("loginError");
-    const button = document.getElementById("googleLogin");
-    if (message) {
-      message.textContent = "এই ফাইলটি সরাসরি মোবাইলে খুললে Google Login কাজ করবে না। Firebase Authentication-এর জন্য HTTPS Hosting প্রয়োজন।";
-    }
-    if (button) {
-      button.addEventListener("click", function () {
-        const target = document.getElementById("loginError");
-        if (target) target.textContent = "সমাধান: অ্যাপটি Firebase Hosting বা অন্য HTTPS Hosting-এ প্রকাশ করে সেই ওয়েব ঠিকানা থেকে খুলুন।";
-      });
-    }
-  });
-}
-</script>
-
     <script type="module">
 
 import { initializeApp }
@@ -2713,8 +2489,6 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   onAuthStateChanged,
   signOut
 }
@@ -2758,37 +2532,20 @@ const loginBtn = document.getElementById("googleLogin");
 const loginError = document.getElementById("loginError");
 
 loginBtn.addEventListener("click", async () => {
-  // A local file has no valid web origin for Firebase Google Authentication.
-  if (location.protocol === "file:") {
-    loginError.textContent = "Google Login চালু করতে অ্যাপটি HTTPS ওয়েবসাইটে Hosting করতে হবে। শুধু Download করা HTML ফাইল থেকে Login হবে না।";
-    return;
-  }
 
   loginBtn.disabled = true;
-  loginBtn.textContent = "Redirecting to Google...";
+  loginBtn.innerHTML = "Signing in...";
+
   loginError.textContent = "";
 
   try {
-    // Redirect is more reliable than popups in mobile browsers.
-    await signInWithRedirect(auth, provider);
-  } catch (error) {
-    loginError.textContent = "Google Login failed: " + (error.code || error.message);
-    loginBtn.disabled = false;
-    loginBtn.innerHTML = `
-      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-      width="22" height="22">
-      Continue with Google
-    `;
-  }
-});
 
-// Complete the Google sign-in after returning from the provider.
-getRedirectResult(auth).catch((error) => {
-  console.error("Google redirect sign-in error:", error);
-  if (loginError) {
-    loginError.textContent = "Google Login failed: " + (error.code || error.message);
-  }
-  if (loginBtn) {
+    await signInWithPopup(auth, provider);
+
+  } catch(error) {
+
+    loginError.textContent = error.message;
+
     loginBtn.disabled = false;
     loginBtn.innerHTML = `
       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -2839,4 +2596,3 @@ onAuthStateChanged(auth, async (user) => {
     </script>
 </body>
 </html>
-   
