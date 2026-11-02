@@ -1883,7 +1883,7 @@ async function saveData() {
     localStorage.setItem("mealmate_dirty_" + user.uid, "1");
   } catch (error) {
     console.warn("Meal Mate local save failed:", error);
-    alert("ফোনে ডেটা সেভ করা যায়নি। ফোনের storage খালি আছে কি না দেখুন।");
+    alert("Can not save data on the phone. Please check your phone storage.");
     return;
   }
 
@@ -1892,13 +1892,13 @@ async function saveData() {
     try {
       await window.setDoc(window.doc(window.db, "MealMate", user.uid), payload);
       localStorage.removeItem("mealmate_dirty_" + user.uid);
-      updateSyncStatus("সিঙ্ক হয়েছে");
+      updateSyncStatus("Synced...");
     } catch (error) {
       console.warn("Meal Mate cloud sync pending:", error);
-      updateSyncStatus("অফলাইন — ফোনে সেভ আছে");
+      updateSyncStatus("Offline — Saved in phone..");
     }
   } else {
-    updateSyncStatus("অফলাইন — ফোনে সেভ আছে");
+    updateSyncStatus("Offline — Saved in phone..");
   }
 }
 
@@ -3001,3 +3001,4 @@ startFirebase().catch(error => {
 </body>
 </html>
   
+ 
