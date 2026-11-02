@@ -1514,57 +1514,55 @@ select{
 </style>
 
 </head>
+
 <body>
-    <!-- PREMIUM PROFILE MENU -->
 
-<div class="profile-wrapper">
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen" style="
+  display:flex;
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+">
+  <div class="login-card" style="padding:40px 30px; width:100%; max-width:360px; text-align:center;">
+    <h1 class="hello-text" style="margin-bottom:8px;">Hello</h1>
+    <h1 class="login-brand" style="font-size:22px; margin-bottom:6px;">Meal Mate</h1>
+    <p style="font-size:14px; margin-bottom:28px;">Sign in to manage your meals</p>
 
-  <button id="profileBtn" onclick="toggleProfileMenu()">
-    <span class="menu-dash"></span>
-    <span class="menu-dash"></span>
-    <span class="menu-dash"></span>
-  </button>
+    <button id="googleLogin" style="
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      font-weight:700;
+      font-size:15px;
+      cursor:pointer;
+    ">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+           width="22" height="22">
+      Continue with Google
+    </button>
 
-  <div id="profileMenu" class="profile-menu">
+    <div id="loginError" style="
+      color:#e77c70;
+      font-size:13px;
+      margin-top:15px;
+      min-height:18px;
+    "></div>
 
-    <div class="profile-heading">
-      <div>
-        <h3>My Profile</h3>
-        <p>Meal Mate Account</p>
-      </div>
-      <span class="profile-star">✦</span>
+    <div class="login-footer" style="font-size:12px; margin-top:22px;">
+      Designed by Arafat
     </div>
-
-    <div class="profile-divider"></div>
-
-    <div class="profile-option">
-      <span>⚙️</span>
-      <span>Account Settings</span>
-    </div>
-
-    <div class="profile-option">
-      <span>🌙</span>
-      <span>Dark Mode</span>
-
-      <label class="switch">
-        <input type="checkbox"
-               id="profileDarkMode"
-               onchange="toggleTheme()">
-        <span class="switch-slider"></span>
-      </label>
-    </div>
-
-    <div class="profile-divider"></div>
-
-    <div class="profile-option logout-option"
-         onclick="window.logoutMealMate()">
-      <span>↪</span>
-      <span>Logout</span>
-    </div>
-
   </div>
 </div>
 
+<!-- আপনার বাকি সব কোড এখানে... -->
 <div id="appShell" style="display:none">
 <!-- PREMIUM PROFILE MENU -->
 
