@@ -1511,6 +1511,128 @@ select{
 .switch input:checked + .switch-slider:before {
     transform: translateX(17px);
 }
+
+/* ===== NAV PROFILE BUTTON + ACCOUNT SETTINGS ===== */
+nav {
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+    gap: 0;
+    padding-right: 6px;
+}
+nav::-webkit-scrollbar { display: none; }
+nav a {
+    flex: 1 0 auto;
+    white-space: nowrap;
+}
+.profile-wrapper {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    flex: 0 0 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 4px 0 7px;
+    z-index: 100001;
+}
+#profileBtn {
+    position: relative;
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    flex: 0 0 40px;
+}
+.profile-menu {
+    top: 48px !important;
+    right: 0 !important;
+    z-index: 100002;
+}
+.profile-option[onclick] { cursor: pointer; }
+.account-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(0,0,0,.68);
+    backdrop-filter: blur(8px);
+}
+.account-modal-card {
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+    padding: 24px;
+    border-radius: 22px;
+    color: #eee7d9;
+    background: #15120d;
+    border: 1px solid rgba(190,150,70,.45);
+    box-shadow: 0 18px 55px rgba(0,0,0,.5);
+}
+.account-modal-card h2 {
+    color: #d6b66d;
+    margin: 0 35px 20px 0;
+}
+.account-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 24px;
+    line-height: 1;
+    color: #eee7d9;
+    background: #302719;
+    box-shadow: none;
+}
+.account-user {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 14px;
+    border: 1px solid rgba(190,150,70,.25);
+    border-radius: 14px;
+    overflow-wrap: anywhere;
+}
+.account-user img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.account-user strong { color: #f5e8c9; }
+.account-user p, .account-help {
+    color: #b9b0a0;
+    font-size: 13px;
+    margin-top: 5px;
+}
+.account-help { margin: 16px 0; line-height: 1.5; }
+.account-modal-card .account-change-btn,
+.account-modal-card .account-cancel-btn {
+    margin-top: 10px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+}
+.account-modal-card .account-change-btn {
+    color: #17130b;
+    background: linear-gradient(135deg,#b99a55,#94743a);
+}
+.account-modal-card .account-cancel-btn {
+    color: #eee7d9;
+    background: #302719;
+    box-shadow: none;
+}
+@media(max-width:600px) {
+    nav a { padding: 11px 8px; font-size: 12px; }
+    .profile-wrapper { flex-basis: 44px; margin-left: 4px; }
+}
+
 </style>
 
 </head>
@@ -1566,6 +1688,7 @@ select{
 <div id="appShell" style="display:none">
 <!-- PREMIUM PROFILE MENU -->
 
+<nav>
 <div class="profile-wrapper">
 
   <button id="profileBtn" onclick="toggleProfileMenu()">
@@ -1586,7 +1709,7 @@ select{
 
     <div class="profile-divider"></div>
 
-    <div class="profile-option">
+    <div class="profile-option" onclick="openAccountSettings()">
       <span>⚙️</span>
       <span>Account Settings</span>
     </div>
@@ -1614,7 +1737,6 @@ select{
   </div>
 </div>
 
-<nav>
   <a href="#" onclick="showPage('dashboard')">Dashboard</a>
   <a href="#" onclick="showPage('members')">Members</a>
   <a href="#" onclick="showPage('deposit')">Deposit</a>
@@ -1622,6 +1744,23 @@ select{
   <a href="#" onclick="showPage('expenss')">Expenses </a>
   <a href="#" onclick="showPage('report')">Report</a>
 </nav>
+
+<div id="accountSettingsModal" class="account-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+  <div class="account-modal-card">
+    <button class="account-modal-close" type="button" onclick="closeAccountSettings()" aria-label="Close">×</button>
+    <h2 id="accountModalTitle">Google Account</h2>
+    <div class="account-user">
+      <img id="accountUserPhoto" alt="" style="display:none">
+      <div>
+        <strong id="accountUserName">Signed in</strong>
+        <p id="accountUserEmail"></p>
+      </div>
+    </div>
+    <p class="account-help">এখান থেকে বর্তমান Google account পরিবর্তন করতে পারবে।</p>
+    <button type="button" class="account-change-btn" onclick="window.changeGoogleAccount()">Change Google Account</button>
+    <button type="button" class="account-cancel-btn" onclick="closeAccountSettings()">Close</button>
+  </div>
+</div>
 
 <section id="dashboard" class="active">
   <div class="card"><h3>Total Meal</h3><p id="totalMeal">0</p></div>
@@ -2413,6 +2552,37 @@ window.addEventListener("DOMContentLoaded", function() {
     }
 });
 
+
+function openAccountSettings() {
+    const menu = document.getElementById("profileMenu");
+    if (menu) menu.classList.remove("active");
+
+    const user = window.currentUser;
+    const modal = document.getElementById("accountSettingsModal");
+    const name = document.getElementById("accountUserName");
+    const email = document.getElementById("accountUserEmail");
+    const photo = document.getElementById("accountUserPhoto");
+
+    if (name) name.textContent = user?.displayName || "Google Account";
+    if (email) email.textContent = user?.email || "Account information unavailable";
+
+    if (photo) {
+        if (user?.photoURL) {
+            photo.src = user.photoURL;
+            photo.style.display = "block";
+        } else {
+            photo.removeAttribute("src");
+            photo.style.display = "none";
+        }
+    }
+    if (modal) modal.style.display = "flex";
+}
+
+function closeAccountSettings() {
+    const modal = document.getElementById("accountSettingsModal");
+    if (modal) modal.style.display = "none";
+}
+
 function shareReportWhatsApp() {
     const monthInput = getSelectedMonth();
     let monthName = monthInput;
@@ -2563,6 +2733,30 @@ window.logoutMealMate = async function(){
     await signOut(auth);
   } catch(error) {
     alert(error.message);
+  }
+};
+
+window.changeGoogleAccount = async function() {
+  const changeButton = document.querySelector(".account-change-btn");
+  try {
+    if (changeButton) {
+      changeButton.disabled = true;
+      changeButton.textContent = "Opening Google...";
+    }
+    closeAccountSettings();
+    provider.setCustomParameters({ prompt: "select_account" });
+    if (auth.currentUser) {
+      await signOut(auth);
+    }
+    await signInWithPopup(auth, provider);
+  } catch (error) {
+    console.error("Google account change failed:", error);
+    alert("Google account change করা যায়নি: " + (error.message || error));
+  } finally {
+    if (changeButton) {
+      changeButton.disabled = false;
+      changeButton.textContent = "Change Google Account";
+    }
   }
 };
 
