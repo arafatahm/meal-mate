@@ -1647,17 +1647,6 @@ nav a {
 #profileMenu.active { display: block !important; visibility: visible !important; opacity: 1; }
 nav { position: relative; }
 
-
-/* Profile controls: remove mobile tap flash and focus outline. */
-#profileBtn, #profileMenu .profile-option, #profileMenu .profile-option * {
-  -webkit-tap-highlight-color: transparent !important;
-}
-#profileBtn:focus, #profileBtn:focus-visible,
-#profileMenu .profile-option:focus, #profileMenu .profile-option:focus-visible {
-  outline: none !important;
-}
-#profileMenu .profile-option:active { background: transparent !important; }
-
 </style>
 
 </head>
@@ -1762,12 +1751,12 @@ nav { position: relative; }
   </div>
 </div>
 
-  <a href="#" onclick="showPage('dashboard', this)">Dashboard</a>
-  <a href="#" onclick="showPage('members', this)">Members</a>
-  <a href="#" onclick="showPage('deposit', this)">Deposit</a>
-  <a href="#" onclick="showPage('meallist', this)">Meals</a>
-  <a href="#" onclick="showPage('expenss', this)">Expenses </a>
-  <a href="#" onclick="showPage('report', this)">Report</a>
+  <a href="#" onclick="showPage('dashboard')">Dashboard</a>
+  <a href="#" onclick="showPage('members')">Members</a>
+  <a href="#" onclick="showPage('deposit')">Deposit</a>
+  <a href="#" onclick="showPage('meallist')">Meals</a>
+  <a href="#" onclick="showPage('expenss')">Expenses </a>
+  <a href="#" onclick="showPage('report')">Report</a>
 </nav>
 
 <div id="accountSettingsModal" class="account-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
@@ -1858,76 +1847,41 @@ nav { position: relative; }
 <footer><i>Designed by Arafat</i></footer>
 
 <script>
-function createEmptyMealMateData() {
-  return { members: [], monthMembers: {}, meals: {}, deposits: {}, expenss: {} };
-}
-let data = createEmptyMealMateData();
-let selectedMonth = new Date().toISOString().slice(0, 7);
+let data = {
+  members: JSON.parse(localStorage.getItem('members')) || [],
+  monthMembers: JSON.parse(localStorage.getItem('monthMembers')) || {},
+  meals: JSON.parse(localStorage.getItem('meals')) || {},
+  deposits: JSON.parse(localStorage.getItem('deposits')) || {},
+  expenss: JSON.parse(localStorage.getItem('expenss')) || {}
+};
 
-async function saveData() {
-  const user = window.currentUser;
-  if (!user || !user.uid) return;
+let selectedMonth = localStorage.getItem('selectedMonth') || new Date().toISOString().slice(0,7);
 
-  const payload = {
-    members: data.members,
-    monthMembers: data.monthMembers,
-    meals: data.meals,
-    deposits: data.deposits,
-    expenss: data.expenss,
-    selectedMonth
-  };
+ async function saveData(){
+  localStorage.setItem('members', JSON.stringify(data.members));
+  localStorage.setItem('monthMembers', JSON.stringify(data.monthMembers));
+  localStorage.setItem('meals', JSON.stringify(data.meals));
+  localStorage.setItem('deposits', JSON.stringify(data.deposits));
+  localStorage.setItem('expenss', JSON.stringify(data.expenss));
+  localStorage.setItem('selectedMonth', selectedMonth);
 
-  // Save locally first, so the app remains usable without internet.
-  try {
-    localStorage.setItem("mealmate_user_" + user.uid, JSON.stringify(payload));
-    localStorage.setItem("mealmate_dirty_" + user.uid, "1");
-  } catch (error) {
-    console.warn("Meal Mate local save failed:", error);
-    alert("Can not save data on the phone. Please check your phone storage.");
-    return;
+  if(window.db && window.currentUser){
+    await window.setDoc(
+      window.doc(
+        window.db,
+        "MealMate",
+        window.currentUser.uid
+      ),
+      {
+        members:data.members,
+        monthMembers:data.monthMembers,
+        meals:data.meals,
+        deposits:data.deposits,
+        expenss:data.expenss,
+        selectedMonth:selectedMonth
+      }
+    );
   }
-
-  // Sync to Firebase whenever a connection is available.
-  if (navigator.onLine && window.db && window.doc && window.setDoc) {
-    try {
-      await window.setDoc(window.doc(window.db, "MealMate", user.uid), payload);
-      localStorage.removeItem("mealmate_dirty_" + user.uid);
-      updateSyncStatus("Synced...");
-    } catch (error) {
-      console.warn("Meal Mate cloud sync pending:", error);
-      updateSyncStatus("Offline — Saved in phone..");
-    }
-  } else {
-    updateSyncStatus("Offline — Saved in phone..");
-  }
-}
-
-let mealMateSyncToastTimer = null;
-
-function updateSyncStatus(message) {
-  let status = document.getElementById("mealMateSyncStatus");
-
-  if (!status) {
-    status = document.createElement("div");
-    status.id = "mealMateSyncStatus";
-    status.setAttribute("role", "status");
-    status.setAttribute("aria-live", "polite");
-    status.style.cssText = "position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(8px);z-index:99999;padding:9px 14px;border-radius:22px;background:#173b35;color:white;font:13px Arial,sans-serif;box-shadow:0 3px 12px #0003;opacity:0;transition:opacity .2s ease,transform .2s ease;pointer-events:none;max-width:calc(100% - 32px);text-align:center";
-    document.body.appendChild(status);
-  }
-
-  status.textContent = message;
-  status.style.opacity = "1";
-  status.style.transform = "translateX(-50%) translateY(0)";
-
-  if (mealMateSyncToastTimer) {
-    clearTimeout(mealMateSyncToastTimer);
-  }
-
-  mealMateSyncToastTimer = setTimeout(() => {
-    status.style.opacity = "0";
-    status.style.transform = "translateX(-50%) translateY(8px)";
-  }, 2500);
 }
 
 // (এখানে কোড সংক্ষেপ করা হলো না, আপনার আগের সব কোড ঠিকঠাক আছে)
@@ -2042,7 +1996,7 @@ callback(v);
 }
 
 // **ধাপ ৪ এখানে ফিক্স করা হলো:**
-function showPage(pageId, clickedLink) {
+function showPage(pageId) {
     // ১. সব সেকশন থেকে 'active' ক্লাস সরিয়ে ফেলা
     const sections = document.querySelectorAll('section');
     sections.forEach(s => s.classList.remove('active'));
@@ -2058,7 +2012,7 @@ function showPage(pageId, clickedLink) {
     navLinks.forEach(a => a.classList.remove('active'));
     
     // ৪. বর্তমানে ক্লিক করা বাটনে 'active' ক্লাস যোগ করা
-    if (clickedLink) clickedLink.classList.add('active');
+    event.currentTarget.classList.add('active');
 
     // ৫. পেজ অনুযায়ী সংশ্লিষ্ট ফাংশন কল করা
     switch(pageId) {
@@ -2479,87 +2433,42 @@ function refreshAll(){
   renderReport();
 }
 
-async function loadData() {
-  const user = window.currentUser;
-  if (!user || !user.uid) return;
+async function loadData(){
 
-  const cacheKey = "mealmate_user_" + user.uid;
-  const empty = createEmptyMealMateData();
-  data = empty;
-  selectedMonth = new Date().toISOString().slice(0, 7);
+  if(window.db && window.currentUser){
 
-  // Immediately restore this account's own local copy.
-  let hasLocal = false;
-  try {
-    const raw = localStorage.getItem(cacheKey);
-    if (raw) {
-      const local = JSON.parse(raw);
+    const snap = await window.getDoc(
+      window.doc(
+        window.db,
+        "MealMate",
+        window.currentUser.uid
+      )
+    );
+
+    if(snap.exists()){
+
+      const cloud = snap.data();
+
       data = {
-        members: Array.isArray(local.members) ? local.members : [],
-        monthMembers: local.monthMembers && typeof local.monthMembers === "object" ? local.monthMembers : {},
-        meals: local.meals && typeof local.meals === "object" ? local.meals : {},
-        deposits: local.deposits && typeof local.deposits === "object" ? local.deposits : {},
-        expenss: local.expenss && typeof local.expenss === "object" ? local.expenss : {}
+        members: cloud.members || [],
+        monthMembers: cloud.monthMembers || {},
+        meals: cloud.meals || {},
+        deposits: cloud.deposits || {},
+        expenss: cloud.expenss || {}
       };
-      selectedMonth = typeof local.selectedMonth === "string" ? local.selectedMonth : selectedMonth;
-      hasLocal = true;
+
+      selectedMonth = cloud.selectedMonth || selectedMonth;
+
+    }else{
+      await saveData();
     }
-  } catch (error) {
-    console.warn("Meal Mate local data could not be read:", error);
   }
 
   refreshAll();
-  const monthInput = document.getElementById("mealMonth");
-  if (monthInput) monthInput.value = selectedMonth;
-
-  // Offline: keep using the local copy. Online: fetch cloud copy, unless
-  // local changes are waiting to be synchronized.
-  if (!navigator.onLine || !window.db || !window.doc || !window.getDoc || !window.setDoc) {
-    updateSyncStatus(hasLocal ? "অফলাইন — ফোনের ডেটা ব্যবহার হচ্ছে" : "অফলাইন — ইন্টারনেট এলে প্রথমবার সিঙ্ক করুন");
-    return;
-  }
-
-  try {
-    const userRef = window.doc(window.db, "MealMate", user.uid);
-    const snap = await window.getDoc(userRef);
-    const dirty = localStorage.getItem("mealmate_dirty_" + user.uid) === "1";
-
-    if (dirty && hasLocal) {
-      const localPayload = JSON.parse(localStorage.getItem(cacheKey));
-      await window.setDoc(userRef, localPayload);
-      localStorage.removeItem("mealmate_dirty_" + user.uid);
-      updateSyncStatus("সিঙ্ক হয়েছে");
-    } else if (snap.exists()) {
-      const cloud = snap.data() || {};
-      data = {
-        members: Array.isArray(cloud.members) ? cloud.members : [],
-        monthMembers: cloud.monthMembers && typeof cloud.monthMembers === "object" ? cloud.monthMembers : {},
-        meals: cloud.meals && typeof cloud.meals === "object" ? cloud.meals : {},
-        deposits: cloud.deposits && typeof cloud.deposits === "object" ? cloud.deposits : {},
-        expenss: cloud.expenss && typeof cloud.expenss === "object" ? cloud.expenss : {}
-      };
-      selectedMonth = typeof cloud.selectedMonth === "string" && cloud.selectedMonth ? cloud.selectedMonth : selectedMonth;
-      localStorage.setItem(cacheKey, JSON.stringify({ ...data, selectedMonth }));
-      refreshAll();
-      if (monthInput) monthInput.value = selectedMonth;
-      updateSyncStatus("অনলাইনে সিঙ্ক হয়েছে");
-    } else if (!hasLocal) {
-      await window.setDoc(userRef, { ...createEmptyMealMateData(), selectedMonth });
-      localStorage.setItem(cacheKey, JSON.stringify({ ...data, selectedMonth }));
-      updateSyncStatus("নতুন অ্যাকাউন্ট প্রস্তুত");
-    }
-  } catch (error) {
-    console.warn("Cloud unavailable; continuing with local data:", error);
-    updateSyncStatus("সিঙ্ক হয়নি — ফোনে সেভ আছে");
-  }
 }
 
-window.addEventListener("online", async () => {
-  updateSyncStatus("ইন্টারনেট পাওয়া গেছে — সিঙ্ক হচ্ছে");
-  if (window.currentUser) await loadData();
-});
-window.addEventListener("offline", () => updateSyncStatus("অফলাইন — ফোনে সেভ হচ্ছে"));
 
+loadData();
 function animateValue(id, end, prefix = "", suffix = "", decimals = 0){
 
     const el = document.getElementById(id);
@@ -2785,105 +2694,143 @@ function toggleShareButton(currentPageId) {
 </button>
 </div>
     <script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  signOut
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA2a3KkSLbQefiYb239Z-ei2W-u6dRNPT4",
+  authDomain: "mealmate-60b1d.firebaseapp.com",
+  projectId: "mealmate-60b1d",
+  storageBucket: "mealmate-60b1d.firebasestorage.app",
+  messagingSenderId: "75832210081",
+  appId: "1:75832210081:web:93371f26376cc92e3a36e0",
+  measurementId: "G-FY8YM0189N"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+const provider = new GoogleAuthProvider();
+
+window.db = db;
+window.doc = doc;
+window.getDoc = getDoc;
+window.setDoc = setDoc;
+
 const loginScreen = document.getElementById("loginScreen");
 const appShell = document.getElementById("appShell");
 const loginBtn = document.getElementById("googleLogin");
 const loginError = document.getElementById("loginError");
 
-function showOfflineApp() {
-  const uid = localStorage.getItem("mealmate_offline_uid");
-  if (!uid) {
-    loginError.textContent = "প্রথমবার Google দিয়ে লগইন করতে ইন্টারনেট লাগবে। আগে লগইন করা থাকলে একই ব্রাউজারে অফলাইন ডেটা পাওয়া যাবে।";
-    return;
+loginBtn.addEventListener("click", async () => {
+
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = "Signing in...";
+
+  loginError.textContent = "";
+
+  try {
+
+    await signInWithPopup(auth, provider);
+
+  } catch(error) {
+
+    loginError.textContent = error.message;
+
+    loginBtn.disabled = false;
+    loginBtn.innerHTML = `
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+      width="22" height="22">
+      Continue with Google
+    `;
   }
-  window.currentUser = { uid, displayName: "Offline user", isOffline: true };
-  loginScreen.style.display = "none";
-  appShell.style.display = "block";
-  window.loadData().catch(console.error);
-  updateSyncStatus("অফলাইন মোড — ফোনে সেভ হচ্ছে");
-}
-
-async function startFirebase() {
-  const [appModule, authModule, firestoreModule] = await Promise.all([
-    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
-    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"),
-    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js")
-  ]);
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA2a3KkSLbQefiYb239Z-ei2W-u6dRNPT4",
-    authDomain: "mealmate-60b1d.firebaseapp.com",
-    projectId: "mealmate-60b1d",
-    storageBucket: "mealmate-60b1d.firebasestorage.app",
-    messagingSenderId: "75832210081",
-    appId: "1:75832210081:web:93371f26376cc92e3a36e0",
-    measurementId: "G-FY8YM0189N"
-  };
-
-  const app = appModule.initializeApp(firebaseConfig);
-  const auth = authModule.getAuth(app);
-  const db = firestoreModule.getFirestore(app);
-  const provider = new authModule.GoogleAuthProvider();
-
-  window.db = db;
-  window.doc = firestoreModule.doc;
-  window.getDoc = firestoreModule.getDoc;
-  window.setDoc = firestoreModule.setDoc;
-
-  loginBtn.addEventListener("click", async () => {
-    loginBtn.disabled = true;
-    loginBtn.textContent = "Signing in...";
-    loginError.textContent = "";
-    try {
-      await authModule.signInWithPopup(auth, provider);
-    } catch (error) {
-      loginError.textContent = error.message;
-      loginBtn.disabled = false;
-      loginBtn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" height="22"> Continue with Google';
-    }
-  });
-
-  window.logoutMealMate = async function() {
-    if (!confirm("Are you sure you want to logout?")) return;
-    localStorage.removeItem("mealmate_offline_uid");
-    try { await authModule.signOut(auth); }
-    catch (error) { alert(error.message); }
-  };
-
-  window.changeGoogleAccount = async function() {
-    try {
-      localStorage.removeItem("mealmate_offline_uid");
-      provider.setCustomParameters({ prompt: "select_account" });
-      if (auth.currentUser) await authModule.signOut(auth);
-      await authModule.signInWithPopup(auth, provider);
-    } catch (error) {
-      alert("Google account change করা যায়নি: " + (error.message || error));
-    }
-  };
-
-  authModule.onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      window.currentUser = user;
-      localStorage.setItem("mealmate_offline_uid", user.uid);
-      loginScreen.style.display = "none";
-      appShell.style.display = "block";
-      try { await window.loadData(); }
-      catch (error) { console.error(error); updateSyncStatus("Cloud sync হয়নি — ফোনে ডেটা থাকলে ব্যবহার করুন"); }
-    } else {
-      window.currentUser = null;
-      data = createEmptyMealMateData();
-      selectedMonth = new Date().toISOString().slice(0, 7);
-      appShell.style.display = "none";
-      loginScreen.style.display = "flex";
-    }
-  });
-}
-
-startFirebase().catch(error => {
-  console.warn("Firebase unavailable; starting offline mode:", error);
-  showOfflineApp();
 });
-</script>
+
+window.logoutMealMate = async function(){
+
+  if(!confirm("Are you sure you want to logout?")) return;
+
+  try {
+    await signOut(auth);
+  } catch(error) {
+    alert(error.message);
+  }
+};
+
+window.changeGoogleAccount = async function() {
+  const changeButton = document.querySelector(".account-change-btn");
+  try {
+    if (changeButton) {
+      changeButton.disabled = true;
+      changeButton.textContent = "Opening Google...";
+    }
+    closeAccountSettings();
+    provider.setCustomParameters({ prompt: "select_account" });
+    if (auth.currentUser) {
+      await signOut(auth);
+    }
+    await signInWithPopup(auth, provider);
+  } catch (error) {
+    console.error("Google account change failed:", error);
+    alert("Google account change করা যায়নি: " + (error.message || error));
+  } finally {
+    if (changeButton) {
+      changeButton.disabled = false;
+      changeButton.textContent = "Change Google Account";
+    }
+  }
+};
+
+onAuthStateChanged(auth, async (user) => {
+
+  if(user){
+
+    window.currentUser = user;
+
+    loginScreen.style.display = "none";
+    appShell.style.display = "block";
+
+    try {
+      await window.loadData();
+    } catch(error) {
+      console.error(error);
+      alert("Database loading failed: " + error.message);
+    }
+
+  }else{
+
+    window.currentUser = null;
+
+    appShell.style.display = "none";
+    loginScreen.style.display = "flex";
+
+  }
+
+});
+
+    </script>
 
 <style id="profile-menu-final-visibility">
 #profileMenu.mm-force-open {
@@ -3000,5 +2947,4 @@ startFirebase().catch(error => {
                 </script>
 </body>
 </html>
-  
- 
+   
