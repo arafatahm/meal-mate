@@ -2842,7 +2842,7 @@ async function startFirebase() {
   const auth = authModule.getAuth(app);
   const db = firestoreModule.getFirestore(app);
   const provider = new authModule.GoogleAuthProvider();
-
+  provider.addScope("email");
   window.db = db;
   window.doc = firestoreModule.doc;
   window.getDoc = firestoreModule.getDoc;
