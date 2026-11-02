@@ -2697,18 +2697,36 @@ function openAccountSettings() {
     const email = document.getElementById("accountUserEmail");
     const photo = document.getElementById("accountUserPhoto");
 
-    if (name) name.textContent = user?.displayName || "Google Account";
-    if (email) email.textContent = user?.email || "Account information unavailable";
+    const googleAccount = user?.providerData?.find(
+        p => p.providerId === "google.com"
+    );
+
+    if (name) {
+        name.textContent =
+            user?.displayName ||
+            googleAccount?.displayName ||
+            "Google Account";
+    }
+
+    if (email) {
+        email.textContent =
+            user?.email ||
+            googleAccount?.email ||
+            "Email unavailable";
+    }
 
     if (photo) {
-        if (user?.photoURL) {
-            photo.src = user.photoURL;
+        const photoURL = user?.photoURL || googleAccount?.photoURL;
+
+        if (photoURL) {
+            photo.src = photoURL;
             photo.style.display = "block";
         } else {
             photo.removeAttribute("src");
             photo.style.display = "none";
         }
     }
+
     if (modal) modal.style.display = "flex";
 }
 
@@ -2793,14 +2811,14 @@ const loginError = document.getElementById("loginError");
 function showOfflineApp() {
   const uid = localStorage.getItem("mealmate_offline_uid");
   if (!uid) {
-    loginError.textContent = "প্রথমবার Google দিয়ে লগইন করতে ইন্টারনেট লাগবে। আগে লগইন করা থাকলে একই ব্রাউজারে অফলাইন ডেটা পাওয়া যাবে।";
+    loginError.textContent = "Connect to the internet for log in.";
     return;
   }
   window.currentUser = { uid, displayName: "Offline user", isOffline: true };
   loginScreen.style.display = "none";
   appShell.style.display = "block";
   window.loadData().catch(console.error);
-  updateSyncStatus("অফলাইন মোড — ফোনে সেভ হচ্ছে");
+  updateSyncStatus("Offline — Saving in phone..");
 }
 
 async function startFirebase() {
