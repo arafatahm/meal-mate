@@ -1868,13 +1868,30 @@ async function saveData() {
   const user = window.currentUser;
   if (!user || !user.uid) return;
 
+  const profile = window.currentUserProfile || {
+    uid: user.uid,
+    displayName: user.displayName || "Google User",
+    email: user.email || window.currentGoogleEmail || "",
+    photoURL: user.photoURL || "",
+    provider: "google.com"
+  };
+
   const payload = {
     members: data.members,
     monthMembers: data.monthMembers,
     meals: data.meals,
     deposits: data.deposits,
     expenss: data.expenss,
-    selectedMonth
+    selectedMonth,
+
+    // Keep Google account information inside the same MealMate document
+    // so normal meal-data saves never remove the email.
+    uid: user.uid,
+    displayName: profile.displayName || "",
+    email: profile.email || "",
+    photoURL: profile.photoURL || "",
+    provider: profile.provider || "google.com",
+    userProfile: profile
   };
 
   // Save locally first, so the app remains usable without internet.
@@ -1890,7 +1907,7 @@ async function saveData() {
   // Sync to Firebase whenever a connection is available.
   if (navigator.onLine && window.db && window.doc && window.setDoc) {
     try {
-      await window.setDoc(window.doc(window.db, "MealMate", user.uid), payload);
+      await window.setDoc(window.doc(window.db, "MealMate", user.uid), payload, { merge: true });
       localStorage.removeItem("mealmate_dirty_" + user.uid);
       updateSyncStatus("Synced..");
     } catch (error) {
@@ -2526,7 +2543,24 @@ async function loadData() {
 
     if (dirty && hasLocal) {
       const localPayload = JSON.parse(localStorage.getItem(cacheKey));
-      await window.setDoc(userRef, localPayload);
+      const profile = window.currentUserProfile || {
+        uid: user.uid,
+        displayName: user.displayName || "Google User",
+        email: user.email || window.currentGoogleEmail || "",
+        photoURL: user.photoURL || "",
+        provider: "google.com"
+      };
+
+      await window.setDoc(userRef, {
+        ...localPayload,
+        uid: user.uid,
+        displayName: profile.displayName || "",
+        email: profile.email || "",
+        photoURL: profile.photoURL || "",
+        provider: profile.provider || "google.com",
+        userProfile: profile
+      }, { merge: true });
+
       localStorage.removeItem("mealmate_dirty_" + user.uid);
       updateSyncStatus("Synced..");
     } else if (snap.exists()) {
@@ -2544,7 +2578,25 @@ async function loadData() {
       if (monthInput) monthInput.value = selectedMonth;
       updateSyncStatus("Synced..");
     } else if (!hasLocal) {
-      await window.setDoc(userRef, { ...createEmptyMealMateData(), selectedMonth });
+      const profile = window.currentUserProfile || {
+        uid: user.uid,
+        displayName: user.displayName || "Google User",
+        email: user.email || window.currentGoogleEmail || "",
+        photoURL: user.photoURL || "",
+        provider: "google.com"
+      };
+
+      await window.setDoc(userRef, {
+        ...createEmptyMealMateData(),
+        selectedMonth,
+        uid: user.uid,
+        displayName: profile.displayName || "",
+        email: profile.email || "",
+        photoURL: profile.photoURL || "",
+        provider: profile.provider || "google.com",
+        userProfile: profile
+      }, { merge: true });
+
       localStorage.setItem(cacheKey, JSON.stringify({ ...data, selectedMonth }));
       updateSyncStatus("New account is ready..");
     }
@@ -2687,40 +2739,27 @@ window.addEventListener("DOMContentLoaded", function() {
 });
 
 
-function openAccountSettings() {
-    const menu = document.getElementById("profileMenu");
-    if (menu) menu.classList.remove("active");
+function updateAccountUI(profile) {
+    if (!profile) return;
 
-    const user = window.currentUser;
-    const modal = document.getElementById("accountSettingsModal");
     const name = document.getElementById("accountUserName");
     const email = document.getElementById("accountUserEmail");
     const photo = document.getElementById("accountUserPhoto");
 
-    const googleAccount = user?.providerData?.find(
-        p => p.providerId === "google.com"
-    );
+    const displayName = profile.displayName || "Google Account";
+    const emailAddress = profile.email || "Email not available";
+    const photoURL = profile.photoURL || "";
 
     if (name) {
-        name.textContent =
-            user?.displayName ||
-            googleAccount?.displayName ||
-            "Google Account";
+        name.textContent = displayName;
     }
 
     if (email) {
-    email.textContent = JSON.stringify({
-        email: user?.email,
-        providers: user?.providerData?.map(p => ({
-            provider: p.providerId,
-            email: p.email
-        }))
-    });
-}
+        // IMPORTANT: never stringify the Firebase user/provider object here.
+        email.textContent = emailAddress;
+    }
 
     if (photo) {
-        const photoURL = user?.photoURL || googleAccount?.photoURL;
-
         if (photoURL) {
             photo.src = photoURL;
             photo.style.display = "block";
@@ -2729,8 +2768,45 @@ function openAccountSettings() {
             photo.style.display = "none";
         }
     }
+}
+
+function openAccountSettings() {
+    const menu = document.getElementById("profileMenu");
+    if (menu) menu.classList.remove("active");
+
+    const user = window.currentUser;
+    const modal = document.getElementById("accountSettingsModal");
+
+    const profile = {
+        uid: user?.uid || "",
+        displayName:
+            user?.displayName ||
+            window.currentUserProfile?.displayName ||
+            "Google Account",
+        email:
+            getGoogleEmailSafe(user) ||
+            window.currentUserProfile?.email ||
+            "",
+        photoURL:
+            user?.photoURL ||
+            window.currentUserProfile?.photoURL ||
+            ""
+    };
+
+    updateAccountUI(profile);
 
     if (modal) modal.style.display = "flex";
+}
+
+// Safe helper because openAccountSettings can also be used before the
+// Firebase module finishes exposing window.getGoogleEmail.
+function getGoogleEmailSafe(user) {
+    return (
+        user?.email ||
+        window.currentGoogleEmail ||
+        user?.providerData?.find(p => p.providerId === "google.com")?.email ||
+        ""
+    );
 }
 
 function closeAccountSettings() {
@@ -2846,17 +2922,114 @@ async function startFirebase() {
   const db = firestoreModule.getFirestore(app);
   const provider = new authModule.GoogleAuthProvider();
   provider.addScope("email");
+  provider.addScope("profile");
+
+  // Keep the email returned by Google OAuth available even if Firebase's
+  // current user object has not populated providerData yet.
+  window.currentGoogleEmail = "";
+
   window.db = db;
   window.doc = firestoreModule.doc;
   window.getDoc = firestoreModule.getDoc;
   window.setDoc = firestoreModule.setDoc;
 
+  async function saveGoogleProfile(user, googleEmail = "") {
+    if (!user || !user.uid) return;
+
+    // Firebase normally supplies user.email. As a fallback, use the email
+    // returned by the Google OAuth profile.
+    const email =
+      user.email ||
+      googleEmail ||
+      user.providerData?.find(p => p.providerId === "google.com")?.email ||
+      "";
+
+    // In a normal Google sign-in Firebase already fills user.email.
+    // If an older/broken session has a blank Auth email but Google OAuth
+    // returned an email, try to repair the Firebase Auth user as well.
+    if (!user.email && email && authModule.updateEmail) {
+      try {
+        await authModule.updateEmail(user, email);
+        await user.reload();
+      } catch (error) {
+        // Firestore will still receive the correct Google email below.
+        console.warn("Firebase Auth email repair skipped:", error);
+      }
+    }
+
+    const profile = {
+      uid: user.uid,
+      displayName: user.displayName || "Google User",
+      email: user.email || email,
+      photoURL: user.photoURL || "",
+      provider: "google.com",
+      updatedAt: new Date().toISOString()
+    };
+
+    window.currentUserProfile = profile;
+
+    // Save profile separately and also merge it into the existing MealMate
+    // document so existing meal data is never replaced by this profile save.
+    try {
+      await window.setDoc(
+        window.doc(window.db, "MealMateUsers", user.uid),
+        profile,
+        { merge: true }
+      );
+
+      await window.setDoc(
+        window.doc(window.db, "MealMate", user.uid),
+        {
+          userProfile: profile,
+          uid: user.uid,
+          displayName: profile.displayName,
+          email: profile.email,
+          photoURL: profile.photoURL,
+          provider: profile.provider
+        },
+        { merge: true }
+      );
+    } catch (error) {
+      console.warn("Google profile sync failed:", error);
+    }
+
+    updateAccountUI(profile);
+  }
+
+  function getGoogleEmail(user) {
+    return (
+      user?.email ||
+      window.currentGoogleEmail ||
+      user?.providerData?.find(p => p.providerId === "google.com")?.email ||
+      window.currentUserProfile?.email ||
+      ""
+    );
+  }
+
+  window.getGoogleEmail = getGoogleEmail;
+
   loginBtn.addEventListener("click", async () => {
     loginBtn.disabled = true;
     loginBtn.textContent = "Signing in...";
     loginError.textContent = "";
+
     try {
-      await authModule.signInWithPopup(auth, provider);
+      const result = await authModule.signInWithPopup(auth, provider);
+
+      // getAdditionalUserInfo().profile.email is a useful fallback when
+      // FirebaseUser.email/providerData.email is temporarily empty.
+      const additionalInfo = authModule.getAdditionalUserInfo
+        ? authModule.getAdditionalUserInfo(result)
+        : null;
+
+      const googleEmail =
+        result?.user?.email ||
+        additionalInfo?.profile?.email ||
+        "";
+
+      window.currentGoogleEmail = googleEmail;
+
+      await saveGoogleProfile(result.user, googleEmail);
     } catch (error) {
       loginError.textContent = error.message;
       loginBtn.disabled = false;
@@ -2874,9 +3047,25 @@ async function startFirebase() {
   window.changeGoogleAccount = async function() {
     try {
       localStorage.removeItem("mealmate_offline_uid");
+      window.currentGoogleEmail = "";
+
       provider.setCustomParameters({ prompt: "select_account" });
-      if (auth.currentUser) await authModule.signOut(auth);
-      await authModule.signInWithPopup(auth, provider);
+
+      if (auth.currentUser) {
+        await authModule.signOut(auth);
+      }
+
+      const result = await authModule.signInWithPopup(auth, provider);
+      const additionalInfo = authModule.getAdditionalUserInfo
+        ? authModule.getAdditionalUserInfo(result)
+        : null;
+
+      window.currentGoogleEmail =
+        result?.user?.email ||
+        additionalInfo?.profile?.email ||
+        "";
+
+      await saveGoogleProfile(result.user, window.currentGoogleEmail);
     } catch (error) {
       alert("Google account change করা যায়নি: " + (error.message || error));
     }
@@ -2885,9 +3074,36 @@ async function startFirebase() {
   authModule.onAuthStateChanged(auth, async (user) => {
     if (user) {
       window.currentUser = user;
+
+      // Reload the Firebase user so the latest Google profile information
+      // is available before the account modal is opened.
+      try {
+        await user.reload();
+      } catch (error) {
+        console.warn("Firebase user reload failed:", error);
+      }
+
+      const email = getGoogleEmail(user);
+
+      window.currentUserProfile = {
+        uid: user.uid,
+        displayName: user.displayName || "Google User",
+        email: email,
+        photoURL: user.photoURL || "",
+        provider: "google.com"
+      };
+
       localStorage.setItem("mealmate_offline_uid", user.uid);
+
+      // Persist the Google account information every time auth state is
+      // restored, including old accounts whose Firestore email was null.
+      await saveGoogleProfile(user, email);
+
+      updateAccountUI(window.currentUserProfile);
+
       loginScreen.style.display = "none";
       appShell.style.display = "block";
+
       try { await window.loadData(); }
       catch (error) { console.error(error); updateSyncStatus("Cloud sync হয়নি — ফোনে ডেটা থাকলে ব্যবহার করুন"); }
     } else {
@@ -3022,3 +3238,4 @@ startFirebase().catch(error => {
 </body>
 </html>
   
+ 
