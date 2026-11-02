@@ -2709,11 +2709,14 @@ function openAccountSettings() {
     }
 
     if (email) {
-        email.textContent =
-            user?.email ||
-            googleAccount?.email ||
-            "Email unavailable";
-    }
+    email.textContent = JSON.stringify({
+        email: user?.email,
+        providers: user?.providerData?.map(p => ({
+            provider: p.providerId,
+            email: p.email
+        }))
+    });
+}
 
     if (photo) {
         const photoURL = user?.photoURL || googleAccount?.photoURL;
