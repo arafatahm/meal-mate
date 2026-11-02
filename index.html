@@ -1164,11 +1164,101 @@ select{
 
 
 </style>
+    <style>
+#loginScreen{
+    position:fixed;
+    inset:0;
+    z-index:9999999;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:25px;
+    background:
+      radial-gradient(circle at 15% 15%,#34D399,transparent 40%),
+      radial-gradient(circle at 90% 90%,#3B82F6,transparent 40%),
+      linear-gradient(135deg,#064E3B,#065F46,#0F172A);
+}
+.login-card{
+    width:100%;
+    max-width:380px;
+    padding:35px 25px;
+    text-align:center;
+    border:1px solid rgba(255,255,255,.25);
+    border-radius:28px;
+    background:rgba(255,255,255,.12);
+    backdrop-filter:blur(25px);
+    box-shadow:0 25px 70px rgba(0,0,0,.3);
+    color:white;
+}
+.login-logo{
+    font-size:55px;
+    margin-bottom:15px;
+}
+.login-card h1{
+    color:white;
+    font-size:32px;
+    margin-bottom:10px;
+}
+.login-card p{
+    color:#D1FAE5;
+    font-size:14px;
+    margin-bottom:30px;
+}
+#googleLogin{
+    background:white;
+    color:#1F2937;
+    border-radius:14px;
+    box-shadow:none;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:12px;
+}
+#googleLogin:disabled{
+    opacity:.6;
+}
+#loginError{
+    color:#FECACA;
+    font-size:13px;
+    margin-top:15px;
+    overflow-wrap:anywhere;
+}
+#logoutBtn{
+    position:fixed;
+    left:12px;
+    top:15px;
+    z-index:999998;
+    width:auto;
+    padding:12px 15px;
+    border-radius:50px;
+    font-size:12px;
+}
+</style>
 </head>
 <body>
-<div id="themeToggle" onclick="toggleTheme()">
-    🌚
+    <div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">🍽️</div>
+    <h1>Meal Mate</h1>
+    <p>Your Mess, Your Management.</p>
+
+    <button id="googleLogin">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+           width="22" height="22">
+      Continue with Google
+    </button>
+
+    <div id="loginError"></div>
+  </div>
 </div>
+
+<div id="appShell" style="display:none">
+<div id="themeToggle" onclick="toggleTheme()">
+      🌚
+</div>
+    <button id="logoutBtn" onclick="window.logoutMealMate()">
+  Logout
+</button>
 
 <nav>
   <a href="#" onclick="showPage('dashboard')">Dashboard</a>
@@ -1260,7 +1350,7 @@ let data = {
 
 let selectedMonth = localStorage.getItem('selectedMonth') || new Date().toISOString().slice(0,7);
 
-async function saveData(){
+ async function saveData(){
   localStorage.setItem('members', JSON.stringify(data.members));
   localStorage.setItem('monthMembers', JSON.stringify(data.monthMembers));
   localStorage.setItem('meals', JSON.stringify(data.meals));
@@ -1268,11 +1358,16 @@ async function saveData(){
   localStorage.setItem('expenss', JSON.stringify(data.expenss));
   localStorage.setItem('selectedMonth', selectedMonth);
 
-  if(window.db){
+  if(window.db && window.currentUser){
     await window.setDoc(
-      window.doc(window.db,"MealMate","data"),
+      window.doc(
+        window.db,
+        "MealMate",
+        window.currentUser.uid
+      ),
       {
         members:data.members,
+        monthMembers:data.monthMembers,
         meals:data.meals,
         deposits:data.deposits,
         expenss:data.expenss,
@@ -1832,19 +1927,36 @@ function refreshAll(){
 }
 
 async function loadData(){
-  if(window.db){
+
+  if(window.db && window.currentUser){
+
     const snap = await window.getDoc(
-      window.doc(window.db,"MealMate","data")
+      window.doc(
+        window.db,
+        "MealMate",
+        window.currentUser.uid
+      )
     );
 
     if(snap.exists()){
-      data = snap.data();
-      selectedMonth = data.selectedMonth || selectedMonth;
+
+      const cloud = snap.data();
+
+      data = {
+        members: cloud.members || [],
+        monthMembers: cloud.monthMembers || {},
+        meals: cloud.meals || {},
+        deposits: cloud.deposits || {},
+        expenss: cloud.expenss || {}
+      };
+
+      selectedMonth = cloud.selectedMonth || selectedMonth;
+
+    }else{
+      await saveData();
     }
-  else{
-  await saveData();
-}
-}
+  }
+
   refreshAll();
 }
 
@@ -2027,5 +2139,120 @@ function toggleShareButton(currentPageId) {
 <button class="whatsapp-fab" id="shareBtn" onclick="shareReportWhatsApp()" title="Share Report on WhatsApp">
     <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp Icon" />
 </button>
+</div>
+    <script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  signOut
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA2a3KkSLbQefiYb239Z-ei2W-u6dRNPT4",
+  authDomain: "mealmate-60b1d.firebaseapp.com",
+  projectId: "mealmate-60b1d",
+  storageBucket: "mealmate-60b1d.firebasestorage.app",
+  messagingSenderId: "75832210081",
+  appId: "1:75832210081:web:93371f26376cc92e3a36e0",
+  measurementId: "G-FY8YM0189N"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+const provider = new GoogleAuthProvider();
+
+window.db = db;
+window.doc = doc;
+window.getDoc = getDoc;
+window.setDoc = setDoc;
+
+const loginScreen = document.getElementById("loginScreen");
+const appShell = document.getElementById("appShell");
+const loginBtn = document.getElementById("googleLogin");
+const loginError = document.getElementById("loginError");
+
+loginBtn.addEventListener("click", async () => {
+
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = "Signing in...";
+
+  loginError.textContent = "";
+
+  try {
+
+    await signInWithPopup(auth, provider);
+
+  } catch(error) {
+
+    loginError.textContent = error.message;
+
+    loginBtn.disabled = false;
+    loginBtn.innerHTML = `
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+      width="22" height="22">
+      Continue with Google
+    `;
+  }
+});
+
+window.logoutMealMate = async function(){
+
+  if(!confirm("Are you sure you want to logout?")) return;
+
+  try {
+    await signOut(auth);
+  } catch(error) {
+    alert(error.message);
+  }
+};
+
+onAuthStateChanged(auth, async (user) => {
+
+  if(user){
+
+    window.currentUser = user;
+
+    loginScreen.style.display = "none";
+    appShell.style.display = "block";
+
+    try {
+      await window.loadData();
+    } catch(error) {
+      console.error(error);
+      alert("Database loading failed: " + error.message);
+    }
+
+  }else{
+
+    window.currentUser = null;
+
+    appShell.style.display = "none";
+    loginScreen.style.display = "flex";
+
+  }
+
+});
+
+    </script>
 </body>
 </html>
