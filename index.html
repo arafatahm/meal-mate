@@ -2861,62 +2861,90 @@ onAuthStateChanged(auth, async (user) => {
 </style>
 <script id="profile-menu-final-wiring">
 (function () {
-  function setupMealMateProfileMenu() {
-    const button = document.getElementById('profileBtn');
-    const menu = document.getElementById('profileMenu');
-    if (!button || !menu || button.dataset.mmBound === '1') return;
-    button.dataset.mmBound = '1';
+    function setupMealMateProfileMenu() {
+        const button = document.getElementById("profileBtn");
+        const menu = document.getElementById("profileMenu");
 
-    function closeMenu() {
-      menu.classList.remove('mm-force-open', 'active');
-      menu.style.removeProperty('display');
-      button.setAttribute('aria-expanded', 'false');
+        if (!button || !menu || button.dataset.mmBound === "1") return;
+
+        button.dataset.mmBound = "1";
+
+        // Move menu outside the scrolling navigation
+        document.body.appendChild(menu);
+
+        menu.style.setProperty("position", "fixed", "important");
+        menu.style.setProperty("z-index", "2147483647", "important");
+
+        function positionMenu() {
+            const rect = button.getBoundingClientRect();
+
+            const width = menu.offsetWidth || 240;
+            const left = Math.max(
+                8,
+                Math.min(rect.left, window.innerWidth - width - 8)
+            );
+
+            const top = Math.min(
+                rect.bottom + 8,
+                Math.max(8, window.innerHeight - menu.offsetHeight - 8)
+            );
+
+            menu.style.setProperty("left", left + "px", "important");
+            menu.style.setProperty("right", "auto", "important");
+            menu.style.setProperty("top", top + "px", "important");
+        }
+
+        function closeMenu() {
+            menu.classList.remove("active", "mm-force-open");
+            button.setAttribute("aria-expanded", "false");
+        }
+
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (menu.classList.contains("active")) {
+                closeMenu();
+            } else {
+                menu.classList.add("active");
+                button.setAttribute("aria-expanded", "true");
+                requestAnimationFrame(positionMenu);
+            }
+        });
+
+        menu.addEventListener("click", function (event) {
+            event.stopPropagation();
+        });
+
+        document.addEventListener("click", function (event) {
+            if (!menu.contains(event.target) &&
+                !button.contains(event.target)) {
+                closeMenu();
+            }
+        });
+
+        window.addEventListener("resize", function () {
+            if (menu.classList.contains("active")) positionMenu();
+        });
+
+        window.addEventListener("scroll", function () {
+            if (menu.classList.contains("active")) positionMenu();
+        }, true);
+
+        const dark = document.getElementById("profileDarkMode");
+
+        if (dark) {
+            dark.checked = document.body.classList.contains("dark");
+        }
     }
 
-    button.addEventListener('click', function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const isOpen = menu.classList.contains('mm-force-open');
-      if (isOpen) {
-        closeMenu();
-        return;
-      }
-
-      const r = button.getBoundingClientRect();
-      menu.classList.add('mm-force-open');
-      menu.style.setProperty('top', Math.min(r.bottom + 8, window.innerHeight - 220) + 'px', 'important');
-      menu.style.setProperty('right', Math.max(8, window.innerWidth - r.right) + 'px', 'important');
-      menu.style.setProperty('left', 'auto', 'important');
-      button.setAttribute('aria-expanded', 'true');
-    }, true);
-
-    menu.addEventListener('click', function (event) {
-      event.stopPropagation();
-    });
-
-    document.addEventListener('click', function (event) {
-      if (!menu.contains(event.target) && !button.contains(event.target)) closeMenu();
-    });
-
-    const dark = document.getElementById('profileDarkMode');
-    if (dark) {
-      dark.addEventListener('change', function () {
-        document.body.classList.toggle('dark', dark.checked);
-        document.documentElement.classList.toggle('dark', dark.checked);
-        localStorage.setItem('theme', dark.checked ? 'dark' : 'light');
-      });
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", setupMealMateProfileMenu);
+    } else {
+        setupMealMateProfileMenu();
     }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupMealMateProfileMenu);
-  } else {
-    setupMealMateProfileMenu();
-  }
 })();
-</script>
-
+                </script>
 </body>
 </html>
   
