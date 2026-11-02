@@ -1633,6 +1633,20 @@ nav a {
     .profile-wrapper { flex-basis: 44px; margin-left: 4px; }
 }
 
+
+/* FINAL FIX: dropdown must escape the horizontally scrolling nav */
+.profile-wrapper { position: relative !important; overflow: visible !important; }
+#profileBtn { pointer-events: auto !important; touch-action: manipulation; }
+#profileMenu {
+    position: fixed !important;
+    min-width: 245px;
+    max-width: calc(100vw - 16px);
+    z-index: 1000000 !important;
+    pointer-events: auto;
+}
+#profileMenu.active { display: block !important; visibility: visible !important; opacity: 1; }
+nav { position: relative; }
+
 </style>
 
 </head>
@@ -1691,7 +1705,7 @@ nav a {
 <nav>
 <div class="profile-wrapper">
 
-  <button id="profileBtn" onclick="toggleProfileMenu()">
+  <button type="button" id="profileBtn" aria-label="প্রোফাইল মেনু খুলুন" aria-expanded="false" onclick="window.toggleProfileMenu(event)">
     <span class="menu-dash"></span>
     <span class="menu-dash"></span>
     <span class="menu-dash"></span>
@@ -2523,22 +2537,51 @@ if (localStorage.getItem("theme") === "dark") {
 
 // PROFILE MENU
 
-function toggleProfileMenu() {
-    const menu = document.getElementById("profileMenu");
-
-    if (menu) {
-        menu.classList.toggle("active");
+window.toggleProfileMenu = function(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
     }
-}
 
-// CLOSE MENU WHEN CLICKING OUTSIDE
+    const button = document.getElementById("profileBtn");
+    const menu = document.getElementById("profileMenu");
+    if (!button || !menu) return;
 
+    const willOpen = !menu.classList.contains("active");
+    menu.classList.toggle("active", willOpen);
+    button.setAttribute("aria-expanded", willOpen ? "true" : "false");
+
+    if (willOpen) {
+        // Keep the dropdown outside the horizontally scrolling navigation
+        // so it remains visible on mobile screens.
+        const rect = button.getBoundingClientRect();
+        menu.style.position = "fixed";
+        menu.style.top = Math.min(rect.bottom + 8, window.innerHeight - 260) + "px";
+        menu.style.right = Math.max(8, window.innerWidth - rect.right) + "px";
+        menu.style.left = "auto";
+        menu.style.zIndex = "1000000";
+    }
+};
+
+// Close the dropdown only when the user taps outside the menu and its button.
 document.addEventListener("click", function(event) {
     const wrapper = document.querySelector(".profile-wrapper");
     const menu = document.getElementById("profileMenu");
+    const button = document.getElementById("profileBtn");
 
-    if (wrapper && menu && !wrapper.contains(event.target)) {
+    if (menu && !menu.contains(event.target) && button && !button.contains(event.target)) {
         menu.classList.remove("active");
+        button.setAttribute("aria-expanded", "false");
+    }
+});
+
+window.addEventListener("resize", function() {
+    const menu = document.getElementById("profileMenu");
+    const button = document.getElementById("profileBtn");
+    if (menu && button && menu.classList.contains("active")) {
+        const rect = button.getBoundingClientRect();
+        menu.style.top = Math.min(rect.bottom + 8, window.innerHeight - 260) + "px";
+        menu.style.right = Math.max(8, window.innerWidth - rect.right) + "px";
     }
 });
 
