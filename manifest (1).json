@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Meal Mate",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "mealmate",
+  "start_url": "/",
+  "theme_color": "#023114",
+  "id": "Meal Mate ",
+  "description": "Meal Mate helps you plan meals, save receipts, and manage your counting."
+}
