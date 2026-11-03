@@ -1696,11 +1696,15 @@ nav { position: relative; }
       Continue with Google
     </button>
 
-    <div id="loginError" style="
-      color:#e77c70;
-      font-size:13px;
-      margin-top:15px;
-      min-height:18px;
+    <button id="offlineLogin" type="button" style="
+      display:block; width:100%; margin-top:12px; padding:12px;
+      border:1px solid #b9c7bb; border-radius:14px; background:transparent;
+      color:inherit; font-size:14px; font-weight:600; cursor:pointer;
+    ">Use offline mode (save on this phone)</button>
+
+    <div id="loginError" role="alert" aria-live="polite" style="
+      color:#e77c70; font-size:13px; margin-top:15px; min-height:18px;
+      overflow-wrap:anywhere;
     "></div>
 
   </div>
@@ -1902,7 +1906,7 @@ async function saveData() {
   }
 
   // Sync to Firebase whenever a connection is available.
-  if (navigator.onLine && window.db && window.doc && window.setDoc) {
+  if (!user.isOffline && navigator.onLine && window.db && window.doc && window.setDoc) {
     try {
       await window.setDoc(window.doc(window.db, "MealMate", user.uid), payload, { merge: true });
       localStorage.removeItem("mealmate_dirty_" + user.uid);
@@ -2528,7 +2532,7 @@ async function loadData() {
 
   // Offline: keep using the local copy. Online: fetch cloud copy, unless
   // local changes are waiting to be synchronized.
-  if (!navigator.onLine || !window.db || !window.doc || !window.getDoc || !window.setDoc) {
+  if (user.isOffline || !navigator.onLine || !window.db || !window.doc || !window.getDoc || !window.setDoc) {
     updateSyncStatus(hasLocal ? "Offline — Saved in phone .." : "Offline — Sync first while back to online");
     return;
   }
@@ -2883,18 +2887,36 @@ const loginScreen = document.getElementById("loginScreen");
 const appShell = document.getElementById("appShell");
 const loginBtn = document.getElementById("googleLogin");
 const loginError = document.getElementById("loginError");
+const offlineLoginBtn = document.getElementById("offlineLogin");
+
+function startOfflineMode() {
+  let uid = localStorage.getItem("mealmate_offline_uid");
+  if (!uid) {
+    uid = "offline_" + (window.crypto?.randomUUID?.() || (Date.now().toString(36) + Math.random().toString(36).slice(2)));
+    localStorage.setItem("mealmate_offline_uid", uid);
+  }
+  window.currentUser = { uid, displayName: "Offline user", email: "", isOffline: true };
+  window.currentUserProfile = { uid, displayName: "Offline user", email: "", photoURL: "", provider: "offline" };
+  loginScreen.style.display = "none";
+  appShell.style.display = "block";
+  window.loadData().catch(error => {
+    console.error("Offline data load failed:", error);
+    updateSyncStatus("Local data could not be loaded");
+  });
+  updateSyncStatus("Offline — Saving on this phone");
+}
 
 function showOfflineApp() {
   const uid = localStorage.getItem("mealmate_offline_uid");
   if (!uid) {
-    loginError.textContent = "Connect to the internet for log in.";
+    loginError.textContent = "Firebase login is not available. You can use Offline mode to save data on this phone.";
     return;
   }
   window.currentUser = { uid, displayName: "Offline user", isOffline: true };
   loginScreen.style.display = "none";
   appShell.style.display = "block";
   window.loadData().catch(console.error);
-  updateSyncStatus("Offline — Saving in phone..");
+  updateSyncStatus("Offline — Saving on this phone");
 }
 
 async function startFirebase() {
@@ -2916,10 +2938,21 @@ async function startFirebase() {
 
   const app = appModule.initializeApp(firebaseConfig);
   const auth = authModule.getAuth(app);
+
+  // Explicitly use Firebase browser local persistence so OAuth state is
+  // less likely to be lost when the app runs inside an installed WebView.
+  // This does not bypass WebView storage partitioning if the host blocks it.
+  try {
+    await authModule.setPersistence(auth, authModule.browserLocalPersistence);
+  } catch (persistenceError) {
+    console.warn("Firebase local persistence unavailable:", persistenceError);
+  }
+
   const db = firestoreModule.getFirestore(app);
   const provider = new authModule.GoogleAuthProvider();
   provider.addScope("email");
   provider.addScope("profile");
+  provider.setCustomParameters({ prompt: "select_account" });
 
   // Keep the email returned by Google OAuth available even if Firebase's
   // current user object has not populated providerData yet.
@@ -3005,13 +3038,41 @@ async function startFirebase() {
 
   window.getGoogleEmail = getGoogleEmail;
 
+  function friendlyAuthError(error) {
+    const code = error?.code || "";
+    if (code === "auth/popup-blocked") return "Google sign-in popup was blocked. Allow popups for this app, then try again.";
+    if (code === "auth/popup-closed-by-user") return "Sign-in was cancelled. Please try again.";
+    if (code === "auth/cancelled-popup-request") return "Another sign-in window is already open. Please try again.";
+    if (code === "auth/unauthorized-domain") return "This app domain is not authorized in Firebase. Add the GitHub Pages/HopWeb domain in Firebase Authentication settings.";
+    if (code === "auth/operation-not-allowed") return "Google sign-in is disabled. Enable Google in Firebase Authentication > Sign-in method.";
+    if (code === "auth/network-request-failed") return "Internet connection failed. Check your connection or use Offline mode.";
+    if (code === "auth/invalid-api-key") return "Firebase API key is invalid. Check the Firebase project configuration.";
+    if (code === "auth/web-storage-unsupported" || code === "auth/unsupported-browser") return "This app browser storage is not supported. Open the app in Chrome or use Offline mode.";
+    if (code === "auth/credential-already-in-use" || code === "auth/account-exists-with-different-credential") return "This Google account already has a different sign-in method.";
+    return error?.message || "Google sign-in failed. Please try again or use Offline mode.";
+  }
+
+  offlineLoginBtn?.addEventListener("click", startOfflineMode);
+
   loginBtn.addEventListener("click", async () => {
     loginBtn.disabled = true;
     loginBtn.textContent = "Signing in...";
     loginError.textContent = "";
 
     try {
-      const result = await authModule.signInWithPopup(auth, provider);
+      let result;
+      try {
+        // Popup is preferred in a regular browser.
+        result = await authModule.signInWithPopup(auth, provider);
+      } catch (popupError) {
+        // If the host blocks popups, use redirect flow as a fallback.
+        if (popupError?.code === "auth/popup-blocked") {
+          await authModule.setPersistence(auth, authModule.browserLocalPersistence);
+          await authModule.signInWithRedirect(auth, provider);
+          return; // The page will return after Google sign-in.
+        }
+        throw popupError;
+      }
 
       // getAdditionalUserInfo().profile.email is a useful fallback when
       // FirebaseUser.email/providerData.email is temporarily empty.
@@ -3028,9 +3089,10 @@ async function startFirebase() {
 
       await saveGoogleProfile(result.user, googleEmail);
     } catch (error) {
-      loginError.textContent = error.message;
+      console.error("Meal Mate Google sign-in failed:", error);
+      loginError.textContent = friendlyAuthError(error);
       loginBtn.disabled = false;
-      loginBtn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" height="22"> Continue with Google';
+      loginBtn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" height="22" alt=""> Continue with Google';
     }
   });
 
@@ -3052,7 +3114,17 @@ async function startFirebase() {
         await authModule.signOut(auth);
       }
 
-      const result = await authModule.signInWithPopup(auth, provider);
+      let result;
+      try {
+        result = await authModule.signInWithPopup(auth, provider);
+      } catch (popupError) {
+        if (popupError?.code === "auth/popup-blocked") {
+          await authModule.setPersistence(auth, authModule.browserLocalPersistence);
+          await authModule.signInWithRedirect(auth, provider);
+          return;
+        }
+        throw popupError;
+      }
       const additionalInfo = authModule.getAdditionalUserInfo
         ? authModule.getAdditionalUserInfo(result)
         : null;
@@ -3064,9 +3136,25 @@ async function startFirebase() {
 
       await saveGoogleProfile(result.user, window.currentGoogleEmail);
     } catch (error) {
-      alert("Google account change করা যায়নি: " + (error.message || error));
+      alert("Google account change করা যায়নি: " + friendlyAuthError(error));
     }
   };
+
+  // Complete Google sign-in when Firebase returns from the redirect flow.
+  try {
+    const redirectResult = await authModule.getRedirectResult(auth);
+    if (redirectResult?.user) {
+      const redirectInfo = authModule.getAdditionalUserInfo
+        ? authModule.getAdditionalUserInfo(redirectResult)
+        : null;
+      window.currentGoogleEmail =
+        redirectResult.user.email || redirectInfo?.profile?.email || "";
+      await saveGoogleProfile(redirectResult.user, window.currentGoogleEmail);
+    }
+  } catch (redirectError) {
+    console.error("Meal Mate redirect sign-in failed:", redirectError);
+    loginError.textContent = friendlyAuthError(redirectError);
+  }
 
   authModule.onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -3114,7 +3202,7 @@ async function startFirebase() {
 }
 
 startFirebase().catch(error => {
-  console.warn("Firebase unavailable; starting offline mode:", error);
+  console.warn("Firebase unavailable; showing offline option:", error);
   showOfflineApp();
 });
 </script>
@@ -3235,4 +3323,4 @@ startFirebase().catch(error => {
 </body>
 </html>
   
-  
+ 
